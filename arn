@@ -1,0 +1,9 @@
+{
+      "Effect": "Allow",
+      "Action": "cloudformation:DeleteStack",
+      "Resource": [
+          "arn:aws:cloudformation:<region>:<account-id>:stack/<stack-name>/*",
+          "arn:aws:cloudformation:<region>:<account-id>:stack/<stack-name>/*",
+          "arn:aws:cloudformation:<region>:<account-id>:stack/<stack-name>/*"
+      ]
+    }
