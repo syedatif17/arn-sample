@@ -1,9 +1,26 @@
 {
-      "Effect": "Allow",
-      "Action": "cloudformation:DeleteStack",
-      "Resource": [
-          "arn:aws:cloudformation:<region>:<account-id>:stack/<stack-name>/*",
-          "arn:aws:cloudformation:<region>:<account-id>:stack/<stack-name>/*",
-          "arn:aws:cloudformation:<region>:<account-id>:stack/<stack-name>/*"
-      ]
-    }
+  "Sid": "ACMCreate",
+  "Effect": "Allow",
+  "Action": "acm:ImportCertificate",
+  "Resource": "*",
+  "Condition": {
+    "StringEqualsIgnoreCase": { "aws:RequestTag/division": "sc" },
+    "ForAllValues:StringEquals": { "aws:TagKeys": ["division"] }
+  }
+},
+{
+  "Sid": "ACMManagement",
+  "Effect": "Allow",
+  "Action": [
+    "acm:AddTagsToCertificate",
+    "acm:RemoveTagsFromCertificate",
+    "acm:DeleteCertificate",
+    "acm:GetCertificate",
+    "acm:DescribeCertificate",
+    "acm:ImportCertificate"
+  ],
+  "Resource": "arn:aws:acm::${aws:PrincipalAccount}:certificate/",
+  "Condition": {
+    "StringEqualsIgnoreCase": { "aws:ResourceTag/division": "sc" }
+  }
+}
