@@ -19,8 +19,17 @@
     "acm:DescribeCertificate",
     "acm:ImportCertificate"
   ],
-  "Resource": "arn:aws:acm::${aws:PrincipalAccount}:certificate/",
+  "Resource": "arn:aws:acm:*:*:certificate/*",
   "Condition": {
     "StringEqualsIgnoreCase": { "aws:ResourceTag/division": "sc" }
+  }
+},
+{
+  "Sid": "DenyUntaggedACMImports",
+  "Effect": "Deny",
+  "Action": "acm:ImportCertificate",
+  "Resource": "*",
+  "Condition": {
+    "StringNotEqualsIgnoreCase": { "aws:RequestTag/division": "sc" }
   }
 }
