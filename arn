@@ -1,11 +1,15 @@
 {
   "Sid": "ACMCreate",
   "Effect": "Allow",
-  "Action": "acm:ImportCertificate",
-  "Resource": "*",
+  "Action": [
+    "acm:AddTagsToCertificate",
+    "acm:ImportCertificate"
+  ],
+  "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
   "Condition": {
-    "StringEqualsIgnoreCase": { "aws:RequestTag/division": "sc" },
-    "ForAllValues:StringEquals": { "aws:TagKeys": ["division"] }
+    "ForAnyValue:StringLike": {
+      "aws:RequestTag/Name": "sc-*"
+    }
   }
 },
 {
@@ -13,23 +17,32 @@
   "Effect": "Allow",
   "Action": [
     "acm:AddTagsToCertificate",
-    "acm:RemoveTagsFromCertificate",
     "acm:DeleteCertificate",
     "acm:GetCertificate",
-    "acm:DescribeCertificate",
-    "acm:ImportCertificate"
+    "acm:ImportCertificate",
+    "acm:RemoveTagsFromCertificate"
   ],
-  "Resource": "arn:aws:acm:*:*:certificate/*",
+  "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
   "Condition": {
-    "StringEqualsIgnoreCase": { "aws:ResourceTag/division": "sc" }
+    "StringLike": {
+      "aws:ResourceTag/Name": "sc-*"
+    }
   }
 },
 {
-  "Sid": "DenyUntaggedACMImports",
-  "Effect": "Deny",
-  "Action": "acm:ImportCertificate",
-  "Resource": "*",
+  "Sid": "ACMLegacyManagement",
+  "Effect": "Allow",
+  "Action": [
+    "acm:AddTagsToCertificate",
+    "acm:DeleteCertificate",
+    "acm:GetCertificate",
+    "acm:ImportCertificate",
+    "acm:RemoveTagsFromCertificate"
+  ],
+  "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
   "Condition": {
-    "StringNotEqualsIgnoreCase": { "aws:RequestTag/division": "sc" }
+    "StringEquals": {
+      "aws:ResourceTag/division": "sc"
+    }
   }
 }
