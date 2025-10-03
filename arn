@@ -1,48 +1,48 @@
 {
-  "Sid": "ACMCreate",
-  "Effect": "Allow",
-  "Action": [
-    "acm:AddTagsToCertificate",
-    "acm:ImportCertificate"
-  ],
-  "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
-  "Condition": {
-    "ForAnyValue:StringLike": {
-      "aws:RequestTag/Name": "sc-*"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ACMGeneral",
+      "Effect": "Allow",
+      "Action": [
+        "acm:DescribeCertificate",
+        "acm:ListTagsForCertificate"
+      ],
+      "Resource": "arn:aws:acm:us-east-1:*:certificate/*"
+    },
+    {
+      "Sid": "ACMCreate",
+      "Effect": "Allow",
+      "Action": [
+        "acm:AddTagsToCertificate",
+        "acm:ImportCertificate"
+      ],
+      "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
+      "Condition": {
+        "StringEqualsIgnoreCase": {
+          "aws:RequestTag/division": "sc"
+        },
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": ["division"]
+        }
+      }
+    },
+    {
+      "Sid": "ACMManagement",
+      "Effect": "Allow",
+      "Action": [
+        "acm:AddTagsToCertificate",
+        "acm:DeleteCertificate",
+        "acm:GetCertificate",
+        "acm:ImportCertificate",
+        "acm:RemoveTagsFromCertificate"
+      ],
+      "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
+      "Condition": {
+        "StringEqualsIgnoreCase": {
+          "aws:ResourceTag/division": "sc"
+        }
+      }
     }
-  }
-},
-{
-  "Sid": "ACMManagement",
-  "Effect": "Allow",
-  "Action": [
-    "acm:AddTagsToCertificate",
-    "acm:DeleteCertificate",
-    "acm:GetCertificate",
-    "acm:ImportCertificate",
-    "acm:RemoveTagsFromCertificate"
-  ],
-  "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
-  "Condition": {
-    "StringLike": {
-      "aws:ResourceTag/Name": "sc-*"
-    }
-  }
-},
-{
-  "Sid": "ACMLegacyManagement",
-  "Effect": "Allow",
-  "Action": [
-    "acm:AddTagsToCertificate",
-    "acm:DeleteCertificate",
-    "acm:GetCertificate",
-    "acm:ImportCertificate",
-    "acm:RemoveTagsFromCertificate"
-  ],
-  "Resource": "arn:aws:acm:us-east-1:*:certificate/*",
-  "Condition": {
-    "StringEquals": {
-      "aws:ResourceTag/division": "sc"
-    }
-  }
+  ]
 }
