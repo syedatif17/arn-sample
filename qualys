@@ -1,17 +1,62 @@
-# 1. Check if the Qualys service still exists
-Get-Service | Where-Object { $_.Name -like "*Qualys*" }
+✅ Safe clean-up and reinstallation procedure (no reboot needed)
 
-# 2. Check if the agent folder still exists
-Test-Path "C:\Program Files\Qualys\QualysAgent"
+Please follow these exact steps:
 
-# 3. Check if any Qualys package is still registered
-Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like "*Qualys*" }
+Step 1 — Remove leftover folders
 
+(If these exist, delete them; they’re safe to remove.)
 
 Remove-Item "C:\Program Files\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item "C:\ProgramData\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
 
 
-sc delete QualysAgent
+You may need to re-run the second line twice if the folder was recreated by the failed install.
+
+Step 2 — Remove leftover registry keys
+
+(This is the most common reason for reinstall failure.)
+
+Remove-Item -Path "HKLM:\SOFTWARE\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "HKLM:\SOFTWARE\WOW6432Node\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
+
+
+No reboot required.
+
+Step 3 — Verify the system is clean
+
+Run:
 
 Get-Service | Where-Object { $_.Name -like "*Qualys*" }
+Test-Path "C:\Program Files\Qualys\QualysAgent"
+Test-Path "C:\ProgramData\Qualys"
+
+
+All three should return nothing or False.
+
+Step 4 — Run the installer again
+
+Now retry the install:
+
+cd "C:\Program Files\Qualys\QualysAgent"
+aws_install_qualys.ps1
+
+
+💡 This time the installation should succeed, because:
+
+No old service exists
+
+No old files remain
+
+No registry traces interfere
+
+Step 5 — Verify the new agent
+
+After install completes successfully, confirm it’s running:
+
+Get-Service QualysAgent
+
+
+You should see:
+
+Status : Running
+DisplayName : Qualys Cloud Agent
