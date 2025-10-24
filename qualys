@@ -10,3 +10,8 @@ Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like "*Qualys*" }
 
 Remove-Item "C:\Program Files\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item "C:\ProgramData\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
+
+
+sc delete QualysAgent
+
+Get-Service | Where-Object { $_.Name -like "*Qualys*" }
