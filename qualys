@@ -1,0 +1,12 @@
+# 1. Check if the Qualys service still exists
+Get-Service | Where-Object { $_.Name -like "*Qualys*" }
+
+# 2. Check if the agent folder still exists
+Test-Path "C:\Program Files\Qualys\QualysAgent"
+
+# 3. Check if any Qualys package is still registered
+Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like "*Qualys*" }
+
+
+Remove-Item "C:\Program Files\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item "C:\ProgramData\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
