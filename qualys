@@ -54,3 +54,7 @@ Once the agent is reinstalled and running, you can then reuse:
 
 
 to switch keys later.
+
+
+
+notepad "C:\ProgramData\Qualys\QualysAgent\InstallerLogs\CloudAgentInstaller.log"
