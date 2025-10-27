@@ -1,60 +1,75 @@
-✅ Clean reinstall (Session Manager friendly)
+1️⃣ Go to the Qualys Agent directory
+cd "C:\Program Files\Qualys\QualysAgent"
 
-You can do this 100 % through Session Manager, no RDP needed.
+2️⃣ Download the MSI directly here
 
-1. Clean residual folders
-Remove-Item "C:\Program Files\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item "C:\ProgramData\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
+(We’ll keep it in the same folder)
 
-2. Clear registry remnants (safe)
-Remove-Item -Path "HKLM:\SOFTWARE\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "HKLM:\SOFTWARE\WOW6432Node\Qualys" -Recurse -Force -ErrorAction SilentlyContinue
-
-3. Download and install fresh
-
-Use your same script again:
-
-cd "C:\Program Files"
-Invoke-WebRequest -Uri "https://artifactoryedge-saas.dt.geaerospace.net/artifactory/aero-tools-distribution/Windows_Endpoint_Agents/Qualys/aws_install_qualys.ps1" -OutFile "aws_install_qualys.ps1"
-.\aws_install_qualys.ps1
+Invoke-WebRequest -Uri "https://artifactoryedge-saas.dt.geaerospace.net/artifactory/aero-tools-distribution/Windows_Endpoint_Agents/Qualys/QualysCloudAgent.msi" -OutFile "QualysCloudAgent.msi"
 
 
-That script internally calls the MSI installer, which will:
+✅ This will save the installer as
+C:\Program Files\Qualys\QualysAgent\QualysCloudAgent.msi
 
-Recreate the service (QualysAgent)
+3️⃣ Run the MSI installer (silent repair/install)
+msiexec /i "C:\Program Files\Qualys\QualysAgent\QualysCloudAgent.msi" /qn /l*v "C:\Program Files\Qualys\QualysAgent\Qualys_Install.log"
 
-Write the registry keys
 
-Register it with your activation and customer IDs
+📄 This will:
 
-4. Confirm after reinstall
+Install or repair the agent
+
+Log all details to Qualys_Install.log inside the same directory
+
+Wait 1–2 minutes for it to finish.
+
+4️⃣ Verify that the service was created
 Get-Service QualysAgent
 
 
-If you see Status : Running, it’s successful.
+If you see:
 
-Then confirm provisioning:
+Status   Name           DisplayName
+------   ----           ------------
+Stopped  QualysAgent    Qualys Cloud Agent
 
-& "C:\Program Files\Qualys\QualysAgent\QualysAgent.exe" Action=List
+
+✅ Good — that means installation succeeded.
+
+5️⃣ Reprovision the agent with your new IDs
+
+Now, plug in your real CustomerId, ActivationId, and ServerUri (the same you used for Linux):
+
+.\QualysAgent.exe CustomerId=92ac61bf-83d0-ff6b-8021-03e79d91a06d ActivationId=53540da1-405f-4615-bac5-cdad335c4958 ServerUri=https://qagpublic.qg3.apps.qualys.com/CloudAgent/ /reprovision
 
 
-You’ll get:
+(Replace those IDs if yours are different.)
 
-CustomerId = <your ID>
-ActivationId = <your ID>
-ServerUri = https://qagpublic.qg3.apps.qualys.com/CloudAgent/
+6️⃣ Start the service
+Start-Service QualysAgent
+
+
+Then confirm:
+
+Get-Service QualysAgent
+
+
+You should now see:
+
+Status   Name           DisplayName
+------   ----           ------------
+Running  QualysAgent    Qualys Cloud Agent
+
+7️⃣ Verify it’s registered
+.\QualysAgent.exe Action=List
+
+
+Expected output:
+
+CustomerId = 92ac61bf-83d0-ff6b-8021-03e79d91a06d
+ActivationId = 53540da1-405f-4615-bac5-cdad335c4958
 Status = Connected
 
-⚠️ Why you can’t change activation code now
 
-Because the service and configuration don’t exist — the /reprovision switch can’t create them.
-Once the agent is reinstalled and running, you can then reuse:
-
-.\QualysAgent.exe CustomerId=<newID> ActivationId=<newID> ServerUri=<URL> /reprovision
-
-
-to switch keys later.
-
-
-
-notepad "C:\ProgramData\Qualys\QualysAgent\InstallerLogs\CloudAgentInstaller.log"
+Once you see that — congratulations 🎉
+The Qualys Cloud Agent is fully reinstalled and linked to your correct activation key.
