@@ -73,3 +73,14 @@ Status = Connected
 
 Once you see that — congratulations 🎉
 The Qualys Cloud Agent is fully reinstalled and linked to your correct activation key.
+
+
+
+
+.\QualysAgent.exe CustomerId=92ac61bf-83d0-ff6b-8021-03e79d91a06d ActivationId=53540da1-405f-4615-bac5-cdad335c4958 WebServiceUri=https://qagpublic.qg3.apps.qualys.com/CloudAgent/ /reprovision
+
+
+Start-Service QualysAgent
+Get-Service QualysAgent
+
+.\QualysAgent.exe Action=List
