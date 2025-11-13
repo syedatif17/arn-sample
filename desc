@@ -1,0 +1,154 @@
+1. Implementation Plan (Step-by-Step)
+
+Title: Decommission AWS CodeBuild, IAM Roles, and Secrets Manager Entries
+
+Implementation Steps:
+
+Login to the approved AWS accounts
+
+Authenticate via AWS SSO / Gossamer to the target accounts listed in the RITM.
+
+Switch to the required regions (primarily us-east-1 unless otherwise noted).
+
+Validate resources before deletion
+
+Confirm that the CodeBuild projects, IAM roles, and Secrets Manager entries match the list approved via email.
+
+Take screenshots for evidence and attach to the Change.
+
+Decommission CodeBuild Projects
+For each CodeBuild project listed:
+
+Navigate to AWS Console → CodeBuild → Build Projects
+
+Search the project name (or ARN).
+
+Open project → Click Actions > Delete.
+
+Confirm the deletion.
+(Screenshot for evidence)
+
+Detach Policies from IAM Roles
+For each IAM role listed:
+
+Go to IAM → Roles.
+
+Search for the IAM role name (sc-avi-infodelivery-*).
+
+Under Permissions:
+
+Detach all attached managed policies.
+
+Remove any inline policies (if present).
+(Screenshot for evidence)
+
+Delete IAM Roles
+
+After detaching all policies, click Delete Role.
+
+Confirm deletion.
+(Screenshot for evidence)
+
+Delete Secrets Manager Entries
+For each secret listed:
+
+Go to AWS Secrets Manager → Secrets
+
+Search for the secret name (ARN from “Secrets Manager Removed?” column).
+
+Select secret → Actions → Delete secret
+
+Choose Permanently delete immediately (unless a recovery window is required).
+(Screenshot for evidence)
+
+Verification after deletion
+
+Re-search for each CodeBuild project, IAM role, and secret to confirm deletion.
+
+Document results with screenshots.
+
+Update ServiceNow
+
+Attach all evidence screenshots.
+
+Add notes confirming completion of CodeBuild, IAM role, and Secrets Manager deletion.
+
+2. Backout / Rollback Plan
+
+Since decommissioning is a destructive action, restoring deleted resources requires recreation.
+
+Backout Plan:
+
+CodeBuild projects can be recreated using:
+
+Existing CI/CD templates
+
+Repo buildspec.yml configurations
+
+Previous build logs if required
+
+IAM roles can be recreated using:
+
+Standard IAM templates
+
+CloudFormation or TF modules, if previously used
+
+IAM policy backup (exported before deletion)
+
+Secrets can be recreated using:
+
+Application teams’ stored credentials
+
+Regenerating API keys / tokens / passwords
+
+Recreating secret names and values in Secrets Manager
+
+If deletion errors occur:
+
+Stop the change
+
+Notify requestor (Sven / Bob)
+
+Provide evidence of failure
+
+Reschedule once dependencies are cleared
+
+3. Risk & Impact Analysis
+
+Risk Level: Medium
+Justification:
+
+Resources are already confirmed unused by application owners.
+
+Deletions affect only deprecated pipelines.
+
+IAM role deletion may break functionality if mistakenly linked elsewhere.
+
+Impact Mitigation:
+
+Validated all resources with requester approval email.
+
+Screenshots and dependency checks will be performed before deletion.
+
+4. Testing / Validation Plan
+
+After deletion, verify:
+
+CodeBuild project is no longer listed.
+
+IAM roles no longer exist in IAM → Roles.
+
+Secrets no longer exist in Secrets Manager.
+
+Confirm that no active applications or pipelines are using these roles or secrets.
+
+Attach validation screenshots to the Change Request.
+
+5. Implementation Notes for Change Request
+
+Add this to the CR description field:
+
+This CR is raised for the decommissioning of obsolete AWS CodeBuild projects, associated IAM roles, and Secrets Manager entries as part of RITM GERITM52065819.
+Approval received from application owner (Bob) on <DATE>, screenshot evidence attached.
+Resources identified via the Decom Page – AVI Code Build APP TEAM DLs.
+Decommissioning will follow the approved steps outlined in the Implementation Plan.
