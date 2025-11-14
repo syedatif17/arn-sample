@@ -1,0 +1,60 @@
+✅ Correct delete commands (SAFE ONLY for Azure Arc)
+
+Run these:
+
+sudo rm -f /etc/systemd/system/azcmagent.service
+sudo rm -f /etc/systemd/system/himds.service
+sudo rm -f /etc/systemd/system/extd.service
+sudo rm -f /etc/systemd/system/gcad.service
+sudo rm -f /etc/systemd/system/arcproxy.service
+
+
+Also remove the "wants" symlink folders:
+
+sudo rm -f /etc/systemd/system/multi-user.target.wants/azcmagent.service
+sudo rm -f /etc/systemd/system/multi-user.target.wants/himds.service
+sudo rm -f /etc/systemd/system/multi-user.target.wants/extd.service
+sudo rm -f /etc/systemd/system/multi-user.target.wants/gcad.service
+sudo rm -f /etc/systemd/system/multi-user.target.wants/arcproxy.service
+
+
+Now reload systemd:
+
+sudo systemctl daemon-reload
+
+🔍 Why bash showed 899 possibilities?
+
+Because the directory /etc/systemd/system/ contains:
+
+all OS service unit files
+
+all "wants" symlinks
+
+all target units
+
+all vendor override directories
+
+So bash said:
+
+899 possibilities? (y or n)
+
+
+This is normal for RHEL 9 and CentOS/Rocky 9.
+
+🟢 You are doing everything correct so far
+
+Just avoid using:
+
+rm -rf /etc/systemd/system/
+
+
+That will break your OS.
+
+📌 Next step
+
+Send me one thing:
+
+The output of:
+
+ls -l /etc/systemd/system | grep -i azure
+ls -l /etc/systemd/system | grep -i himds
