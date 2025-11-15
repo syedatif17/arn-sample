@@ -1,60 +1,114 @@
-✅ Correct delete commands (SAFE ONLY for Azure Arc)
+✅ STEP 1 — Disable and stop all Arc services
 
-Run these:
+Run:
 
-sudo rm -f /etc/systemd/system/azcmagent.service
-sudo rm -f /etc/systemd/system/himds.service
-sudo rm -f /etc/systemd/system/extd.service
-sudo rm -f /etc/systemd/system/gcad.service
-sudo rm -f /etc/systemd/system/arcproxy.service
+sudo systemctl stop himdsd arcproxyd extd gcad
+sudo systemctl disable himdsd arcproxyd extd gcad
 
 
-Also remove the "wants" symlink folders:
+If any service shows “not found” → that is okay.
 
-sudo rm -f /etc/systemd/system/multi-user.target.wants/azcmagent.service
-sudo rm -f /etc/systemd/system/multi-user.target.wants/himds.service
+✅ STEP 2 — Remove service files from ALL correct folders
+
+Run these EXACT commands (they are safe):
+
+sudo rm -f /usr/lib/systemd/system/himdsd.service
+sudo rm -f /usr/lib/systemd/system/arcproxyd.service
+sudo rm -f /usr/lib/systemd/system/extd.service
+sudo rm -f /usr/lib/systemd/system/gcad.service
+
+sudo rm -f /etc/systemd/system/multi-user.target.wants/himdsd.service
+sudo rm -f /etc/systemd/system/multi-user.target.wants/arcproxyd.service
 sudo rm -f /etc/systemd/system/multi-user.target.wants/extd.service
 sudo rm -f /etc/systemd/system/multi-user.target.wants/gcad.service
-sudo rm -f /etc/systemd/system/multi-user.target.wants/arcproxy.service
 
-
-Now reload systemd:
-
+✅ STEP 3 — Reload systemd
 sudo systemctl daemon-reload
 
-🔍 Why bash showed 899 possibilities?
+❗ STEP 4 — Remove old identities + certificates
 
-Because the directory /etc/systemd/system/ contains:
+This is the MOST important part. Otherwise it will always remain Disconnected.
 
-all OS service unit files
+Run:
 
-all "wants" symlinks
+sudo rm -rf /var/opt/azcmagent
+sudo rm -rf /opt/azcmagent
+sudo rm -rf /etc/opt/azcmagent
 
-all target units
+❗ STEP 5 — Confirm everything is CLEAN
 
-all vendor override directories
+Run:
 
-So bash said:
-
-899 possibilities? (y or n)
-
-
-This is normal for RHEL 9 and CentOS/Rocky 9.
-
-🟢 You are doing everything correct so far
-
-Just avoid using:
-
-rm -rf /etc/systemd/system/
+sudo find / -name "azcmagent" 2>/dev/null
 
 
-That will break your OS.
+The ONLY valid result should be:
 
-📌 Next step
+(no output)
 
-Send me one thing:
 
-The output of:
+If you still see /opt/azcmagent/bin/azcmagent, delete it:
 
-ls -l /etc/systemd/system | grep -i azure
-ls -l /etc/systemd/system | grep -i himds
+sudo rm -rf /opt/azcmagent
+
+🔥 STEP 6 — Now perform a CLEAN reinstall
+
+Run the official installer:
+
+cd /root
+curl -o install.sh -L https://aka.ms/azcmagent
+sudo bash install.sh
+
+
+This will reinstall:
+
+✔ himdsd
+✔ extd
+✔ arcproxyd
+✔ gcad
+✔ azcmagent binary
+
+✅ STEP 7 — Verify services
+systemctl status himdsd arcproxyd extd gcad
+
+
+EXPECTED:
+
+himdsd → running
+
+arcproxyd → running
+
+extd → running
+
+gcad → running
+
+🟢 STEP 8 — Verify Arc connection
+azcmagent show
+azcmagent show status
+
+
+This time it will NOT freeze.
+
+📌 WHY THIS HAPPENED
+
+You had:
+
+Old identity files
+
+Old certificates
+
+Services partially removed
+
+Systemd not fully cleaned
+
+Multiple installs on top of each other
+
+This ALWAYS causes Disconnected state + hanging CLI.
+
+A full purge → reinstall fixes it 100%.
+
+👍 Do this:
+
+Send me the output of:
+
+sudo find / -name "azcmagent" 2>/dev/null
