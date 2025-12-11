@@ -1,5 +1,5 @@
 The call focused on the decommission process and whether decommissions are cloud-only or cloud + other resources
 
-If someone needs to decommission a database, they still use the full-stack project decommission process, which is GEPRJ. We also discussed with them that if there are many items to decommission and a part of it involves cloud, they should open a ticket with the Cloud ops team.
+If someone needs to decommission a database, they still use the full-stack project decommission process, which is GEPRJ. We also discussed that if there are many items to decommission and a part of it involves cloud, they should open a ticket with the Cloud ops team.
 
 Later, we reviewed the Confluence page, which explains the steps for identifying the assets which involves finding the AppCID or UAI, then looking at the inventory page to identify the accounts and then fetching the asset data. Based on that asset data,  we then send an email to the application team asking the resources they are planning to decommission.
