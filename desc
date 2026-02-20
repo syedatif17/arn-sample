@@ -1,154 +1,147 @@
-1. Implementation Plan (Step-by-Step)
+📘 SOP: Splunk Universal Forwarder GUID Remediation
 
-Title: Decommission AWS CodeBuild, IAM Roles, and Secrets Manager Entries
+Applies to: Linux and Windows servers
+Purpose: Ensure each Splunk Universal Forwarder (UF) has a unique GUID to prevent duplicate reporting and dropped connections in Splunk Cloud.
 
-Implementation Steps:
+1️⃣ Background
 
-Login to the approved AWS accounts
+The Splunk Universal Forwarder generates a GUID (Globally Unique Identifier) on first startup and stores it in:
 
-Authenticate via AWS SSO / Gossamer to the target accounts listed in the RITM.
+Linux:
+/opt/splunkforwarder/etc/instance.cfg
 
-Switch to the required regions (primarily us-east-1 unless otherwise noted).
+Windows:
+C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg
 
-Validate resources before deletion
+If servers are cloned from a golden image after Splunk has already started, multiple servers may share the same GUID.
 
-Confirm that the CodeBuild projects, IAM roles, and Secrets Manager entries match the list approved via email.
+This can cause:
 
-Take screenshots for evidence and attach to the Change.
+Dropped forwarder connections
 
-Decommission CodeBuild Projects
-For each CodeBuild project listed:
+Incorrect host reporting
 
-Navigate to AWS Console → CodeBuild → Build Projects
+Data ingestion inconsistencies
 
-Search the project name (or ARN).
+Duplicate asset conflicts
 
-Open project → Click Actions > Delete.
+2️⃣ When to Perform This Remediation
 
-Confirm the deletion.
-(Screenshot for evidence)
+Perform GUID remediation if:
 
-Detach Policies from IAM Roles
-For each IAM role listed:
+Multiple servers report the same GUID
 
-Go to IAM → Roles.
+Splunk team identifies duplicate GUIDs
 
-Search for the IAM role name (sc-avi-infodelivery-*).
+Server was cloned from an image with Splunk pre-installed
 
-Under Permissions:
+During AMI hardening process (recommended best practice)
 
-Detach all attached managed policies.
+3️⃣ Pre-Change Requirements
 
-Remove any inline policies (if present).
-(Screenshot for evidence)
+Approved change request (if production)
 
-Delete IAM Roles
+Confirm server is reporting to Splunk
 
-After detaching all policies, click Delete Role.
+Confirm maintenance window (if required)
 
-Confirm deletion.
-(Screenshot for evidence)
+4️⃣ GUID Remediation – Linux
+Step 1: Verify current GUID
+cat /opt/splunkforwarder/etc/instance.cfg
 
-Delete Secrets Manager Entries
-For each secret listed:
+Document the existing GUID.
 
-Go to AWS Secrets Manager → Secrets
+Step 2: Stop Splunk Forwarder
 
-Search for the secret name (ARN from “Secrets Manager Removed?” column).
+If systemd-managed:
 
-Select secret → Actions → Delete secret
+systemctl stop SplunkForwarder
 
-Choose Permanently delete immediately (unless a recovery window is required).
-(Screenshot for evidence)
+If not systemd-managed:
 
-Verification after deletion
+/opt/splunkforwarder/bin/splunk stop
+Step 3: Remove instance.cfg
+rm -f /opt/splunkforwarder/etc/instance.cfg
+Step 4: Start Splunk Forwarder
 
-Re-search for each CodeBuild project, IAM role, and secret to confirm deletion.
+If systemd-managed:
 
-Document results with screenshots.
+systemctl start SplunkForwarder
 
-Update ServiceNow
+If not:
 
-Attach all evidence screenshots.
+/opt/splunkforwarder/bin/splunk start
+Step 5: Validate new GUID
+cat /opt/splunkforwarder/etc/instance.cfg
 
-Add notes confirming completion of CodeBuild, IAM role, and Secrets Manager deletion.
+Confirm:
 
-2. Backout / Rollback Plan
+A new GUID is generated
 
-Since decommissioning is a destructive action, restoring deleted resources requires recreation.
+It differs from the previous value
 
-Backout Plan:
+5️⃣ GUID Remediation – Windows
+Step 1: Verify current GUID
 
-CodeBuild projects can be recreated using:
+PowerShell (Run as Administrator):
 
-Existing CI/CD templates
+Get-Content "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
 
-Repo buildspec.yml configurations
+Document the existing GUID.
 
-Previous build logs if required
+Step 2: Stop Splunk Service
+Stop-Service SplunkForwarder
 
-IAM roles can be recreated using:
+Verify stopped:
 
-Standard IAM templates
+Get-Service SplunkForwarder
+Step 3: Remove instance.cfg
+Remove-Item "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
+Step 4: Start Splunk Service
+Start-Service SplunkForwarder
+Step 5: Validate new GUID
+Get-Content "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
 
-CloudFormation or TF modules, if previously used
+Confirm new GUID is generated.
 
-IAM policy backup (exported before deletion)
+6️⃣ Post-Validation in Splunk Cloud
 
-Secrets can be recreated using:
+Confirm server is reporting:
 
-Application teams’ stored credentials
+(index=linux OR index=windows)
+host="<hostname>"
+| stats count by host
 
-Regenerating API keys / tokens / passwords
+Optional: Validate no duplicate GUIDs:
 
-Recreating secret names and values in Secrets Manager
+index=_internal sourcetype=splunkd
+| rex "guid=(?<guid>[A-Fa-f0-9-]+)"
+| stats dc(forwarder) as forwarder_count values(forwarder) by guid
+| where forwarder_count > 1
+7️⃣ Golden Image Best Practice (IMPORTANT)
 
-If deletion errors occur:
+When building AMIs or templates:
 
-Stop the change
+Recommended approach:
 
-Notify requestor (Sven / Bob)
+Install Splunk Universal Forwarder
 
-Provide evidence of failure
+Configure deployment server / outputs
 
-Reschedule once dependencies are cleared
+Before creating image, run:
 
-3. Risk & Impact Analysis
+Linux:
 
-Risk Level: Medium
-Justification:
+rm -f /opt/splunkforwarder/etc/instance.cfg
 
-Resources are already confirmed unused by application owners.
+Windows:
 
-Deletions affect only deprecated pipelines.
+Remove-Item "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
 
-IAM role deletion may break functionality if mistakenly linked elsewhere.
+Shutdown instance
 
-Impact Mitigation:
+Create image
 
-Validated all resources with requester approval email.
+This ensures each new server generates its own GUID at first boot.
 
-Screenshots and dependency checks will be performed before deletion.
 
-4. Testing / Validation Plan
-
-After deletion, verify:
-
-CodeBuild project is no longer listed.
-
-IAM roles no longer exist in IAM → Roles.
-
-Secrets no longer exist in Secrets Manager.
-
-Confirm that no active applications or pipelines are using these roles or secrets.
-
-Attach validation screenshots to the Change Request.
-
-5. Implementation Notes for Change Request
-
-Add this to the CR description field:
-
-This CR is raised for the decommissioning of obsolete AWS CodeBuild projects, associated IAM roles, and Secrets Manager entries as part of RITM GERITM52065819.
-Approval received from application owner (Bob) on <DATE>, screenshot evidence attached.
-Resources identified via the Decom Page – AVI Code Build APP TEAM DLs.
-Decommissioning will follow the approved steps outlined in the Implementation Plan.
