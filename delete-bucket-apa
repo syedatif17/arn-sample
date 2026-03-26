@@ -1,21 +1,35 @@
-{
-  "Sid": "TempS3BucketEmptyAccess",
-  "Effect": "Allow",
-  "Action": [
-    "s3:DeleteObject",
-    "s3:DeleteObjectVersion",
-    "s3:DeleteObjectTagging",
-    "s3:DeleteObjectVersionTagging"
-  ],
-  "Resource": [
-    "arn:aws:s3:::apa-pfmd-us-east-nonprod",
-    "arn:aws:s3:::apa-pfmd-us-east-nonprod/*",
-    "arn:aws:s3:::apa-sc-dev",
-    "arn:aws:s3:::apa-sc-dev/*"
-  ],
-  "Condition": {
-    "StringEquals": {
-      "aws:ResourceTag/division": "sc"
-    }
-  }
+login() {
+  echo "Select Environment:"
+  echo "1) aero-common"
+  echo "2) aero-gov"
+  echo "3) tmp-common"
+  echo "4) tmp-gov"
+  echo "5) login-all"
+
+  read -p "Enter choice: " choice
+
+  case $choice in
+    1)
+      granted sso login --sso-start-url https://d-9067f92518.awsapps.com/start --sso-region us-east-1
+      ;;
+    2)
+      granted sso login --sso-start-url https://start.us-gov-home.awsapps.com/directory/d-98670d8417 --sso-region us-gov-west-1
+      ;;
+    3)
+      granted sso login --sso-start-url https://d-9067fedeb6.awsapps.com/start --sso-region us-east-1
+      ;;
+    4)
+      granted sso login --sso-start-url https://start.us-gov-home.awsapps.com/directory/d-98670b4d6 --sso-region us-gov-west-1
+      ;;
+    5)
+      echo "Logging into all environments..."
+      granted sso login --sso-start-url https://d-9067f92518.awsapps.com/start --sso-region us-east-1
+      granted sso login --sso-start-url https://d-9067fedeb6.awsapps.com/start --sso-region us-east-1
+      granted sso login --sso-start-url https://start.us-gov-home.awsapps.com/directory/d-98670d8417 --sso-region us-gov-west-1
+      granted sso login --sso-start-url https://start.us-gov-home.awsapps.com/directory/d-98670b4d6 --sso-region us-gov-west-1
+      ;;
+    *)
+      echo "Invalid option"
+      ;;
+  esac
 }
