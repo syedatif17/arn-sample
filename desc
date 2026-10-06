@@ -1,147 +1,29 @@
-📘 SOP: Splunk Universal Forwarder GUID Remediation
+Incident Context
 
-Applies to: Linux and Windows servers
-Purpose: Ensure each Splunk Universal Forwarder (UF) has a unique GUID to prevent duplicate reporting and dropped connections in Splunk Cloud.
+We are currently investigating an issue affecting Windows Server instances following the recent out-of-band (OOB) Windows patch/KB deployment.
 
-1️⃣ Background
+On some affected servers, RDP connectivity is failing and the AWS Systems Manager (SSM) Agent is also going offline/unavailable. This is significantly impacting our ability to remotely access and troubleshoot the affected instances.
 
-The Splunk Universal Forwarder generates a GUID (Globally Unique Identifier) on first startup and stores it in:
+As part of the troubleshooting, we attempted to execute remediation and diagnostic commands through AWS Systems Manager Run Command. However, on the affected instances, the commands are failing because the SSM Agent is offline or not responding.
 
-Linux:
-/opt/splunkforwarder/etc/instance.cfg
+At this stage, we have identified multiple servers experiencing the issue, but the complete scope of impact is still unknown. There may be additional affected servers where the application/technical teams have not yet attempted RDP access or reported an issue. Therefore, we are currently unable to confirm the exact number of impacted instances.
 
-Windows:
-C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg
+Current Impact
 
-If servers are cloned from a golden image after Splunk has already started, multiple servers may share the same GUID.
+* RDP access is unavailable on affected Windows Server instances.
+* SSM Agent is offline/unresponsive on affected instances, preventing normal Run Command-based remediation.
+* Diagnostic/remediation commands executed through SSM Run Command are failing on affected servers.
+* The exact number of impacted servers is currently unknown.
+* Additional impacted servers may be identified as application teams perform their connectivity/access validation.
 
-This can cause:
+Assistance Requested from AWS / AMS
 
-Dropped forwarder connections
+We need assistance from the AWS/AMS team to:
 
-Incorrect host reporting
+1. Confirm whether the reported OOB Windows KB/patch is a known issue affecting RDP and/or the SSM Agent.
+2. Help identify the affected Windows Server instances and determine the potential scope of impact.
+3. Provide guidance on available recovery/remediation options when both RDP and SSM Agent access are unavailable.
+4. Confirm whether there are AWS-side checks or mechanisms that can help identify instances potentially affected by the problematic KB.
+5. Advise on the recommended recovery procedure and whether the affected KB should be rolled back/removed.
 
-Data ingestion inconsistencies
-
-Duplicate asset conflicts
-
-2️⃣ When to Perform This Remediation
-
-Perform GUID remediation if:
-
-Multiple servers report the same GUID
-
-Splunk team identifies duplicate GUIDs
-
-Server was cloned from an image with Splunk pre-installed
-
-During AMI hardening process (recommended best practice)
-
-3️⃣ Pre-Change Requirements
-
-Approved change request (if production)
-
-Confirm server is reporting to Splunk
-
-Confirm maintenance window (if required)
-
-4️⃣ GUID Remediation – Linux
-Step 1: Verify current GUID
-cat /opt/splunkforwarder/etc/instance.cfg
-
-Document the existing GUID.
-
-Step 2: Stop Splunk Forwarder
-
-If systemd-managed:
-
-systemctl stop SplunkForwarder
-
-If not systemd-managed:
-
-/opt/splunkforwarder/bin/splunk stop
-Step 3: Remove instance.cfg
-rm -f /opt/splunkforwarder/etc/instance.cfg
-Step 4: Start Splunk Forwarder
-
-If systemd-managed:
-
-systemctl start SplunkForwarder
-
-If not:
-
-/opt/splunkforwarder/bin/splunk start
-Step 5: Validate new GUID
-cat /opt/splunkforwarder/etc/instance.cfg
-
-Confirm:
-
-A new GUID is generated
-
-It differs from the previous value
-
-5️⃣ GUID Remediation – Windows
-Step 1: Verify current GUID
-
-PowerShell (Run as Administrator):
-
-Get-Content "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
-
-Document the existing GUID.
-
-Step 2: Stop Splunk Service
-Stop-Service SplunkForwarder
-
-Verify stopped:
-
-Get-Service SplunkForwarder
-Step 3: Remove instance.cfg
-Remove-Item "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
-Step 4: Start Splunk Service
-Start-Service SplunkForwarder
-Step 5: Validate new GUID
-Get-Content "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
-
-Confirm new GUID is generated.
-
-6️⃣ Post-Validation in Splunk Cloud
-
-Confirm server is reporting:
-
-(index=linux OR index=windows)
-host="<hostname>"
-| stats count by host
-
-Optional: Validate no duplicate GUIDs:
-
-index=_internal sourcetype=splunkd
-| rex "guid=(?<guid>[A-Fa-f0-9-]+)"
-| stats dc(forwarder) as forwarder_count values(forwarder) by guid
-| where forwarder_count > 1
-7️⃣ Golden Image Best Practice (IMPORTANT)
-
-When building AMIs or templates:
-
-Recommended approach:
-
-Install Splunk Universal Forwarder
-
-Configure deployment server / outputs
-
-Before creating image, run:
-
-Linux:
-
-rm -f /opt/splunkforwarder/etc/instance.cfg
-
-Windows:
-
-Remove-Item "C:\Program Files\SplunkUniversalForwarder\etc\instance.cfg"
-
-Shutdown instance
-
-Create image
-
-This ensures each new server generates its own GUID at first boot.
-
-
+We would appreciate urgent assistance in identifying the root cause, determining the affected instance population, and restoring management/RDP access to the impacted servers.
