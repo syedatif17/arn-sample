@@ -1,29 +1,32 @@
 Incident Context
 
-We are currently investigating an issue affecting Windows Server instances following the recent out-of-band (OOB) Windows patch/KB deployment.
+We are currently investigating an issue affecting Windows Server instances where the AWS Systems Manager (SSM) Agent is offline/unavailable following a recent out-of-band (OOB) Windows patch/KB deployment.
 
-On some affected servers, RDP connectivity is failing and the AWS Systems Manager (SSM) Agent is also going offline/unavailable. This is significantly impacting our ability to remotely access and troubleshoot the affected instances.
+Our primary concern is the potential impact to the upcoming monthly patching cycle. If the SSM Agent remains offline on affected instances, AWS Systems Manager Patch Manager may not be able to communicate with those servers, which could result in the upcoming patching activity failing or those instances being skipped.
 
-As part of the troubleshooting, we attempted to execute remediation and diagnostic commands through AWS Systems Manager Run Command. However, on the affected instances, the commands are failing because the SSM Agent is offline or not responding.
+As part of our investigation, we attempted to execute diagnostic/remediation commands through SSM Run Command. However, commands are failing on instances where the SSM Agent is offline.
 
-At this stage, we have identified multiple servers experiencing the issue, but the complete scope of impact is still unknown. There may be additional affected servers where the application/technical teams have not yet attempted RDP access or reported an issue. Therefore, we are currently unable to confirm the exact number of impacted instances.
+At this time, we have identified multiple instances with the SSM Agent issue, but we do not yet have an accurate count of all potentially affected servers. Additional servers may be affected but have not yet been identified, as application/technical teams may not have tested or reported the status of their respective instances.
 
-Current Impact
+Current Concern / Risk
 
-* RDP access is unavailable on affected Windows Server instances.
-* SSM Agent is offline/unresponsive on affected instances, preventing normal Run Command-based remediation.
-* Diagnostic/remediation commands executed through SSM Run Command are failing on affected servers.
-* The exact number of impacted servers is currently unknown.
-* Additional impacted servers may be identified as application teams perform their connectivity/access validation.
+* SSM Agent is offline/unavailable on affected Windows instances.
+* Run Command execution is failing on affected instances.
+* The upcoming monthly patching cycle relies on SSM connectivity to manage and patch these instances.
+* If the SSM Agent issue is not resolved before the patching window, affected servers may fail to receive their scheduled patches.
+* The total number of potentially affected instances is currently unknown and is still being assessed.
 
 Assistance Requested from AWS / AMS
 
-We need assistance from the AWS/AMS team to:
+We would like AWS/AMS assistance with:
 
-1. Confirm whether the reported OOB Windows KB/patch is a known issue affecting RDP and/or the SSM Agent.
-2. Help identify the affected Windows Server instances and determine the potential scope of impact.
-3. Provide guidance on available recovery/remediation options when both RDP and SSM Agent access are unavailable.
-4. Confirm whether there are AWS-side checks or mechanisms that can help identify instances potentially affected by the problematic KB.
-5. Advise on the recommended recovery procedure and whether the affected KB should be rolled back/removed.
+1. Confirming whether the recent OOB Windows KB/patch is a known cause of the SSM Agent becoming offline/unavailable.
+2. Determining whether there is a way to identify all potentially affected instances across our environment.
+3. Providing a recommended remediation/recovery procedure for restoring SSM Agent functionality on affected Windows servers.
+4. Advising whether the affected KB should be rolled back/removed or whether there is another recommended remediation.
+5. Confirming any potential impact this issue may have on AWS Systems Manager Patch Manager and the upcoming monthly patching cycle.
+6. Recommending any preventive steps we should take before the upcoming patching window to ensure affected instances remain patchable and manageable through SSM.
 
-We would appreciate urgent assistance in identifying the root cause, determining the affected instance population, and restoring management/RDP access to the impacted servers.
+Business / Operational Risk
+
+The immediate concern is patching compliance and operational manageability. If affected servers remain offline from SSM, we may not be able to patch them through our normal Patch Manager process during the upcoming patching cycle. We therefore need to determine the scope of the issue and restore SSM connectivity before the patching window.
